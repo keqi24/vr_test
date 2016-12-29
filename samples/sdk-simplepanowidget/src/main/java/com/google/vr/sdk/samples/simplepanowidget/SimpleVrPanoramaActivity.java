@@ -23,6 +23,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
@@ -61,7 +62,9 @@ public class SimpleVrPanoramaActivity extends Activity {
   private Uri fileUri;
   /** Configuration information for the panorama. **/
   private Options panoOptions = new Options();
-  private ImageLoaderTask backgroundImageLoaderTask;
+  private ImageLoaderTask2 backgroundImageLoaderTask;
+
+  Handler mHandler = new Handler();
 
   /**
    * Called when the app is launched via the app icon or an intent using the adb command above. This
@@ -127,9 +130,32 @@ public class SimpleVrPanoramaActivity extends Activity {
       // Cancel any task from a previous intent sent to this activity.
       backgroundImageLoaderTask.cancel(true);
     }
-    backgroundImageLoaderTask = new ImageLoaderTask();
-    backgroundImageLoaderTask.execute(Pair.create(fileUri, panoOptions));
+    backgroundImageLoaderTask = new ImageLoaderTask2();
+    backgroundImageLoaderTask.doInBackground("out4.jpg");
+
+//    postTask("out2.jpg", 4000);
+//    postTask("andes.jpg", 8000);
+//    postTask("out.jpg", 12000);
+//    postTask("out2.jpg", 16000);
+//    postTask("andes.jpg", 20000);
+//    postTask("out.jpg", 24000);
+//    postTask("out2.jpg", 28000);
+
+
+
   }
+
+  private void postTask(final String img, long timeDelay) {
+    mHandler.postDelayed(new Runnable() {
+      @Override
+      public void run() {
+        backgroundImageLoaderTask.doInBackground(img);
+      }
+    }, timeDelay);
+  }
+
+
+
 
   @Override
   protected void onPause() {
@@ -154,6 +180,53 @@ public class SimpleVrPanoramaActivity extends Activity {
       backgroundImageLoaderTask.cancel(true);
     }
     super.onDestroy();
+  }
+
+  /**
+   * Helper class to manage threading.
+   */
+  class ImageLoaderTask2 extends AsyncTask<String, Void, Boolean> {
+
+    /**
+     * Reads the bitmap from disk in the background and waits until it's loaded by pano widget.
+     */
+    @Override
+    protected Boolean doInBackground(String... params) {
+      Options panoOptions = null;  // It's safe to use null VrPanoramaView.Options.
+      InputStream istr = null;
+
+        AssetManager assetManager = getAssets();
+        try {
+          istr = assetManager.open(params[0]);
+          panoOptions = new Options();
+          panoOptions.inputType = Options.TYPE_STEREO_OVER_UNDER;
+        } catch (IOException e) {
+          Log.e(TAG, "Could not decode default bitmap: " + e);
+          return false;
+        }
+
+      final InputStream stream = istr;
+      final Options options = panoOptions;
+//      mHandler.post(new Runnable() {
+//        @Override
+//        public void run() {
+//
+//        }
+//      });
+
+      panoWidgetView.loadImageFromBitmap(BitmapFactory.decodeStream(stream), options);
+      panoWidgetView.setDisplayMode(2);
+
+      try {
+        istr.close();
+      } catch (IOException e) {
+        Log.e(TAG, "Could not close input stream: " + e);
+      }
+
+      return true;
+    }
+
+
   }
 
   /**
@@ -188,7 +261,6 @@ public class SimpleVrPanoramaActivity extends Activity {
           return false;
         }
       }
-
       panoWidgetView.loadImageFromBitmap(BitmapFactory.decodeStream(istr), panoOptions);
       try {
         istr.close();

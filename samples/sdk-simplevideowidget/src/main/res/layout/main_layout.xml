@@ -11,28 +11,6 @@
         android:padding="10dip"
         android:orientation="vertical" >
 
-        <TextView
-          android:id="@+id/title"
-          style="@style/ContentText"
-          android:textSize="@dimen/title_text_size"
-          android:textStyle="bold"
-          android:textColor="@color/textDark"
-          android:text="@string/title" />
-
-        <TextView
-          android:id="@+id/subtitle"
-          style="@style/ContentText"
-          android:textColor="@color/textLight"
-          android:textSize="@dimen/caption_text_size"
-          android:text="@string/subtitle" />
-
-        <TextView
-          android:id="@+id/paragraph1"
-          style="@style/ContentText"
-          android:textColor="@color/textDark"
-          android:textSize="@dimen/paragragh_text_size"
-          android:text="@string/paragraph1" />
-
         <com.google.vr.sdk.widgets.video.VrVideoView
           android:id="@+id/video_view"
           android:layout_width="match_parent"
@@ -70,17 +48,10 @@
           android:paddingStart="32dp"
           android:paddingEnd="32dp"/>
 
-        <TextView
-          android:id="@+id/paragraph2"
-          style="@style/ContentText"
-          android:textColor="@color/textDark"
-          android:textSize="@dimen/paragragh_text_size"
-          android:text="@string/paragraph2" />
-
-        <TextView
-          android:id="@+id/source"
-          style="@style/ContentText"
-          android:textColor="@color/textDark"
-          android:textSize="@dimen/paragragh_text_size"/>
-  </LinearLayout>
+        <Button
+            android:id="@+id/find_vedio"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Choose vedio"/>
+    </LinearLayout>
 </ScrollView>

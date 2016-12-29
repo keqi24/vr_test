@@ -10,13 +10,12 @@ import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
-import android.widget.ImageButton;
-import android.widget.SeekBar;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
+
 import com.google.vr.sdk.widgets.video.VrVideoEventListener;
 import com.google.vr.sdk.widgets.video.VrVideoView;
 import com.google.vr.sdk.widgets.video.VrVideoView.Options;
+
 import java.io.IOException;
 
 /**
@@ -91,6 +90,9 @@ public class SimpleVrVideoActivity extends Activity {
 
   private ImageButton volumeToggle;
   private boolean isMuted;
+  private Button findVedioBtn;
+
+  private static final int REQUEST_TAKE_GALLERY_VIDEO = 100;
 
   /**
    * By default, the video will start playing as soon as it is loaded. This can be changed by using
@@ -107,11 +109,6 @@ public class SimpleVrVideoActivity extends Activity {
     seekBar.setOnSeekBarChangeListener(new SeekBarListener());
     statusText = (TextView) findViewById(R.id.status_text);
 
-    // Make the source link clickable.
-    TextView sourceText = (TextView) findViewById(R.id.source);
-    sourceText.setText(Html.fromHtml(getString(R.string.source)));
-    sourceText.setMovementMethod(LinkMovementMethod.getInstance());
-
     // Bind input and output objects for the view.
     videoWidgetView = (VrVideoView) findViewById(R.id.video_view);
     videoWidgetView.setEventListener(new ActivityEventListener());
@@ -125,8 +122,47 @@ public class SimpleVrVideoActivity extends Activity {
 
     loadVideoStatus = LOAD_VIDEO_STATUS_UNKNOWN;
 
+    findVedioBtn = (Button) findViewById(R.id.find_vedio);
+    findVedioBtn.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        Intent intent = new Intent();
+        intent.setType("video/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent,"Select Video"),REQUEST_TAKE_GALLERY_VIDEO);
+      }
+    });
+
     // Initial launch of the app or an Activity recreation due to rotation.
     handleIntent(getIntent());
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    if (resultCode == RESULT_OK) {
+      if (requestCode == REQUEST_TAKE_GALLERY_VIDEO) {
+
+        fileUri = data.getData();
+        if (fileUri == null) {
+          Log.w(TAG, "No data uri specified. Use \"-d /path/filename\".");
+        } else {
+          Log.i(TAG, "Using file " + fileUri.toString());
+        }
+
+        Options options = new Options();
+        options.inputType = Options.TYPE_STEREO_OVER_UNDER;
+        // Load the bitmap in a background thread to avoid blocking the UI thread. This operation can
+        // take 100s of milliseconds.
+        if (backgroundVideoLoaderTask != null) {
+          // Cancel any task from a previous intent sent to this activity.
+          backgroundVideoLoaderTask.cancel(true);
+        }
+        backgroundVideoLoaderTask = new VideoLoaderTask();
+        backgroundVideoLoaderTask.execute(Pair.create(fileUri, options));
+
+      }
+    }
   }
 
   /**
